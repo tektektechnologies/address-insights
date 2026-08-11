@@ -41,9 +41,12 @@ function MapFallback({ message }: { message: string }) {
   return (
     <div
       role="status"
-      className="flex h-72 items-center justify-center rounded-2xl border border-[var(--line)] bg-[var(--canvas)] px-4 text-center text-sm text-[var(--ink-muted)] sm:h-96"
+      className="flex h-72 max-w-full items-center justify-center rounded-2xl border border-[var(--line)] bg-[var(--canvas)] px-4 text-center text-sm leading-relaxed text-[var(--ink-muted)] sm:h-96"
     >
-      {message}
+      <p>
+        <span className="font-semibold text-[var(--ink)]">Map unavailable. </span>
+        {message}
+      </p>
     </div>
   );
 }
@@ -200,7 +203,7 @@ function MapCanvas({ latitude, longitude, address, amenities }: MapViewProps) {
   return (
     <div
       ref={containerRef}
-      className="h-72 w-full rounded-2xl border border-[var(--line)] sm:h-96 [&_.leaflet-container]:h-full [&_.leaflet-container]:w-full [&_.leaflet-container]:rounded-2xl [&_.leaflet-container]:z-0"
+      className="h-72 w-full max-w-full overflow-hidden rounded-2xl border border-[var(--line)] sm:h-96 [&_.leaflet-container]:z-0 [&_.leaflet-container]:h-full [&_.leaflet-container]:w-full [&_.leaflet-container]:rounded-2xl [&_.leaflet-control-attribution]:text-[10px] sm:[&_.leaflet-control-attribution]:text-xs"
       role="region"
       aria-label={`Map of amenities near ${address}`}
     />

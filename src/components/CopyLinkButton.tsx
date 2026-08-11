@@ -42,7 +42,7 @@ export function CopyLinkButton() {
   }
 
   return (
-    <div className="relative">
+    <div className="flex min-w-0 flex-col items-stretch gap-1 sm:items-end">
       <button
         type="button"
         onClick={() => {
@@ -54,7 +54,7 @@ export function CopyLinkButton() {
       </button>
       <p
         aria-live="polite"
-        className="absolute top-full right-0 mt-1 whitespace-nowrap text-sm text-[var(--ink-muted)]"
+        className="min-h-5 text-sm break-words text-[var(--ink-muted)] sm:text-right"
       >
         {status === "copied"
           ? "Link copied"

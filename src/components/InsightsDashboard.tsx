@@ -79,9 +79,11 @@ function parseAmenitiesResponse(
       continue;
     }
 
+    const trimmedName = item.name.trim();
+
     amenities.push({
       id: item.id,
-      name: item.name,
+      name: trimmedName || `Unnamed ${item.category}`,
       category: item.category,
       latitude: item.latitude,
       longitude: item.longitude,
@@ -94,12 +96,12 @@ function parseAmenitiesResponse(
 
 function PageShell({ children }: { children: ReactNode }) {
   return (
-    <div className="relative flex min-h-full flex-1 flex-col bg-[var(--canvas)] text-[var(--ink)]">
+    <div className="relative flex min-h-full flex-1 flex-col overflow-x-hidden bg-[var(--canvas)] text-[var(--ink)]">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(15,118,110,0.12),_transparent_55%),linear-gradient(180deg,_#eef5f4_0%,_#f7faf9_45%,_#edf2f1_100%)]"
       />
-      <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-1 flex-col px-5 py-10 sm:px-8 sm:py-12">
+      <div className="relative z-10 mx-auto flex w-full max-w-4xl min-w-0 flex-1 flex-col px-4 py-8 sm:px-8 sm:py-12">
         {children}
       </div>
     </div>
@@ -120,10 +122,10 @@ function SearchAnotherLink() {
 function InvalidLinkState() {
   return (
     <PageShell>
-      <div className="my-auto rounded-2xl border border-[var(--line)] bg-[var(--surface)]/95 p-6 shadow-[0_20px_50px_-28px_rgba(15,23,42,0.35)] sm:p-8">
-        <p className="font-display text-3xl font-semibold tracking-tight">
+      <div className="my-auto rounded-2xl border border-[var(--line)] bg-[var(--surface)]/95 p-5 shadow-[0_20px_50px_-28px_rgba(15,23,42,0.35)] sm:p-8">
+        <h1 className="font-display text-3xl font-semibold tracking-tight break-words">
           This insights link is invalid
-        </p>
+        </h1>
         <p className="mt-3 max-w-xl text-base leading-relaxed text-[var(--ink-muted)]">
           The address or coordinates in this URL are missing or malformed. Start
           a new search to generate a shareable insights page.
@@ -139,11 +141,11 @@ function InvalidLinkState() {
 function LoadingSkeleton({ address }: { address: string }) {
   return (
     <PageShell>
-      <header className="animate-[rise_400ms_ease-out]">
+      <header>
         <p className="text-sm font-medium tracking-wide text-[var(--ink-faint)] uppercase">
           Address Insights
         </p>
-        <h1 className="mt-2 font-display text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">
+        <h1 className="mt-2 font-display text-3xl leading-tight font-semibold tracking-tight break-words sm:text-4xl">
           {address}
         </h1>
         <p className="mt-3 text-sm text-[var(--ink-muted)]" role="status">
@@ -151,10 +153,7 @@ function LoadingSkeleton({ address }: { address: string }) {
         </p>
       </header>
 
-      <div
-        className="mt-8 grid gap-4 sm:grid-cols-3"
-        aria-hidden="true"
-      >
+      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3" aria-hidden="true">
         {Array.from({ length: 3 }).map((_, index) => (
           <div
             key={index}
@@ -301,19 +300,20 @@ export function InsightsDashboard() {
           <p className="text-sm font-medium tracking-wide text-[var(--ink-faint)] uppercase">
             Address Insights
           </p>
-          <h1 className="mt-2 font-display text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">
+          <h1 className="mt-2 font-display text-3xl leading-tight font-semibold tracking-tight break-words sm:text-4xl">
             {location.address}
           </h1>
         </header>
 
         <div
-          className="mt-8 rounded-2xl border border-[var(--line)] bg-[var(--surface)]/95 p-6 sm:p-8"
+          className="mt-8 rounded-2xl border border-[var(--line)] bg-[var(--surface)]/95 p-5 sm:p-8"
           role="alert"
         >
-          <p className="text-lg font-semibold text-[var(--ink)]">
+          <h2 className="text-lg font-semibold text-[var(--ink)]">
             We couldn&apos;t load nearby amenities
-          </p>
-          <p className="mt-2 text-base leading-relaxed text-[var(--ink-muted)]">
+          </h2>
+          <p className="mt-2 text-base leading-relaxed break-words text-[var(--ink-muted)]">
+            <span className="font-semibold text-[var(--danger)]">Error: </span>
             {loadState.message}
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
@@ -341,65 +341,73 @@ export function InsightsDashboard() {
 
   return (
     <PageShell>
-      <header className="animate-[rise_400ms_ease-out]">
+      <header>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <p className="text-sm font-medium tracking-wide text-[var(--ink-faint)] uppercase">
               Address Insights
             </p>
-            <h1 className="mt-2 font-display text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">
+            <h1 className="mt-2 font-display text-3xl leading-tight font-semibold tracking-tight break-words sm:text-4xl">
               {location.address}
             </h1>
           </div>
-          <div className="flex flex-wrap items-start gap-3">
+          <div className="flex shrink-0 flex-wrap items-start gap-3">
             <CopyLinkButton />
             <SearchAnotherLink />
           </div>
         </div>
       </header>
 
-      <section
-        aria-label="Insight scores"
-        className="mt-8 grid animate-[rise_500ms_ease-out] gap-4 sm:grid-cols-3"
-      >
-        <article className="rounded-2xl border border-[var(--line)] bg-[var(--surface)]/95 p-5 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.45)]">
-          <h2 className="text-sm font-medium text-[var(--ink-muted)]">
-            Walking Score
-          </h2>
-          <p className="mt-3 font-display text-5xl font-semibold tracking-tight text-[var(--accent)]">
-            {scores.walking}
-            <span className="ml-1 text-2xl font-medium text-[var(--ink-faint)]">
-              / 100
-            </span>
-          </p>
-        </article>
+      <section aria-labelledby="insight-scores-heading" className="mt-8">
+        <h2 id="insight-scores-heading" className="sr-only">
+          Insight scores
+        </h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <article className="min-w-0 rounded-2xl border border-[var(--line)] bg-[var(--surface)]/95 p-5 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.45)]">
+            <h3 className="text-sm font-medium text-[var(--ink-muted)]">
+              Walking Score
+            </h3>
+            <p className="mt-3 font-display text-5xl font-semibold tracking-tight text-[var(--accent)]">
+              <span className="sr-only">Walking score </span>
+              {scores.walking}
+              <span className="ml-1 text-2xl font-medium text-[var(--ink-faint)]">
+                <span aria-hidden="true">/ 100</span>
+                <span className="sr-only"> out of 100</span>
+              </span>
+            </p>
+          </article>
 
-        <article className="rounded-2xl border border-[var(--line)] bg-[var(--surface)]/95 p-5 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.45)]">
-          <h2 className="text-sm font-medium text-[var(--ink-muted)]">
-            Driving Score
-          </h2>
-          <p className="mt-3 font-display text-5xl font-semibold tracking-tight text-[var(--accent)]">
-            {scores.driving}
-            <span className="ml-1 text-2xl font-medium text-[var(--ink-faint)]">
-              / 100
-            </span>
-          </p>
-        </article>
+          <article className="min-w-0 rounded-2xl border border-[var(--line)] bg-[var(--surface)]/95 p-5 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.45)]">
+            <h3 className="text-sm font-medium text-[var(--ink-muted)]">
+              Driving Score
+            </h3>
+            <p className="mt-3 font-display text-5xl font-semibold tracking-tight text-[var(--accent)]">
+              <span className="sr-only">Driving score </span>
+              {scores.driving}
+              <span className="ml-1 text-2xl font-medium text-[var(--ink-faint)]">
+                <span aria-hidden="true">/ 100</span>
+                <span className="sr-only"> out of 100</span>
+              </span>
+            </p>
+          </article>
 
-        <article className="rounded-2xl border border-[var(--line)] bg-[var(--surface)]/95 p-5 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.45)]">
-          <h2 className="text-sm font-medium text-[var(--ink-muted)]">
-            Urban Index
-          </h2>
-          <p className="mt-3 font-display text-5xl font-semibold tracking-tight text-[var(--accent)]">
-            {scores.urbanIndex}
-            <span className="ml-1 text-2xl font-medium text-[var(--ink-faint)]">
-              / 100
-            </span>
-          </p>
-          <p className="mt-2 text-sm font-semibold text-[var(--ink)]">
-            {scores.urbanLabel}
-          </p>
-        </article>
+          <article className="min-w-0 rounded-2xl border border-[var(--line)] bg-[var(--surface)]/95 p-5 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.45)]">
+            <h3 className="text-sm font-medium text-[var(--ink-muted)]">
+              Urban Index
+            </h3>
+            <p className="mt-3 font-display text-5xl font-semibold tracking-tight text-[var(--accent)]">
+              <span className="sr-only">Urban index </span>
+              {scores.urbanIndex}
+              <span className="ml-1 text-2xl font-medium text-[var(--ink-faint)]">
+                <span aria-hidden="true">/ 100</span>
+                <span className="sr-only"> out of 100</span>
+              </span>
+            </p>
+            <p className="mt-2 text-sm font-semibold text-[var(--ink)]">
+              Density label: {scores.urbanLabel}
+            </p>
+          </article>
+        </div>
       </section>
 
       <p className="mt-5 text-sm leading-relaxed text-[var(--ink-faint)]">
@@ -407,17 +415,31 @@ export function InsightsDashboard() {
         walkability ratings or actual travel times.
       </p>
 
-      <section className="mt-8" aria-label="Neighborhood map">
-        <h2 className="mb-3 text-lg font-semibold tracking-tight">Map</h2>
-        <MapView
-          latitude={location.latitude}
-          longitude={location.longitude}
-          address={location.address}
-          amenities={amenities}
-        />
+      {amenities.length === 0 ? (
+        <p
+          role="status"
+          className="mt-4 rounded-xl border border-[var(--line)] bg-white/80 px-4 py-3 text-sm text-[var(--ink-muted)]"
+        >
+          No nearby amenities were found in OpenStreetMap data for this area.
+          Scores may be low as a result.
+        </p>
+      ) : null}
+
+      <section className="mt-8 min-w-0" aria-labelledby="map-heading">
+        <h2 id="map-heading" className="mb-3 text-lg font-semibold tracking-tight">
+          Map
+        </h2>
+        <div className="max-w-full overflow-hidden">
+          <MapView
+            latitude={location.latitude}
+            longitude={location.longitude}
+            address={location.address}
+            amenities={amenities}
+          />
+        </div>
       </section>
 
-      <section className="mt-8 rounded-2xl border border-[var(--line)] bg-[var(--surface)]/95 p-5 sm:p-6">
+      <section className="mt-8 rounded-2xl border border-[var(--line)] bg-[var(--surface)]/95 p-4 sm:p-6">
         <h2 className="text-lg font-semibold tracking-tight">
           How we calculate this
         </h2>
@@ -436,7 +458,7 @@ export function InsightsDashboard() {
         </ul>
       </section>
 
-      <section className="mt-6 rounded-2xl border border-[var(--line)] bg-[var(--surface)]/95 p-5 sm:p-6">
+      <section className="mt-6 min-w-0 rounded-2xl border border-[var(--line)] bg-[var(--surface)]/95 p-4 sm:p-6">
         <h2 className="text-lg font-semibold tracking-tight">
           Nearby amenity breakdown
         </h2>
@@ -445,17 +467,18 @@ export function InsightsDashboard() {
             No amenities were found within the search radius.
           </p>
         ) : (
-          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+          <ul className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
             {breakdown.map((item) => (
               <li
                 key={item.category}
-                className="flex items-center justify-between rounded-xl bg-[var(--canvas)] px-3 py-2 text-sm"
+                className="flex min-w-0 items-center justify-between gap-3 rounded-xl bg-[var(--canvas)] px-3 py-2 text-sm"
               >
-                <span className="text-[var(--ink)]">
+                <span className="min-w-0 break-words text-[var(--ink)]">
                   {formatAmenityCategory(item.category)}
                 </span>
-                <span className="font-semibold text-[var(--ink-muted)]">
+                <span className="shrink-0 font-semibold text-[var(--ink-muted)]">
                   {item.count}
+                  <span className="sr-only"> places</span>
                 </span>
               </li>
             ))}
@@ -463,7 +486,7 @@ export function InsightsDashboard() {
         )}
       </section>
 
-      <section className="mt-6 mb-4 rounded-2xl border border-[var(--line)] bg-[var(--surface)]/95 p-5 sm:p-6">
+      <section className="mt-6 mb-4 min-w-0 rounded-2xl border border-[var(--line)] bg-[var(--surface)]/95 p-4 sm:p-6">
         <h2 className="text-lg font-semibold tracking-tight">
           Nearest amenities
         </h2>
@@ -476,10 +499,10 @@ export function InsightsDashboard() {
             {nearest.map((amenity, index) => (
               <li
                 key={amenity.id}
-                className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:justify-between"
+                className="flex min-w-0 flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4"
               >
                 <div className="min-w-0">
-                  <p className="font-medium text-[var(--ink)]">
+                  <p className="font-medium break-words text-[var(--ink)]">
                     <span className="mr-2 text-[var(--ink-faint)]">
                       {index + 1}.
                     </span>
