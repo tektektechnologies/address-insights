@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { formatAmenityCategory, formatDistance } from "@/src/lib/format";
+import { saveSearchHistoryEntry } from "@/src/lib/history";
 import { parseInsightsLocation } from "@/src/lib/insights-location";
 import {
   calculateInsightScores,
@@ -269,6 +270,19 @@ export function InsightsDashboard() {
       controller.abort();
     };
   }, [location, retryKey]);
+
+  useEffect(() => {
+    if (!location || loadState.status !== "ready") {
+      return;
+    }
+
+    // Personal browser history only — never used to reconstruct shared pages.
+    saveSearchHistoryEntry({
+      displayName: location.address,
+      latitude: location.latitude,
+      longitude: location.longitude,
+    });
+  }, [location, loadState.status]);
 
   if (!location) {
     return <InvalidLinkState />;

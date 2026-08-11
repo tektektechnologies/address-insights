@@ -1,4 +1,5 @@
 import { AddressSearchForm } from "@/src/components/AddressSearchForm";
+import { RecentSearches } from "@/src/components/RecentSearches";
 
 export default function Home() {
   return (
@@ -30,6 +31,10 @@ export default function Home() {
             and urban scores are transparent heuristics—not official ratings.
           </p>
         </section>
+
+        <div className="animate-[rise_700ms_ease-out]">
+          <RecentSearches />
+        </div>
       </main>
 
       <footer className="relative z-10 mx-auto w-full max-w-2xl px-5 pb-8 text-sm text-[var(--ink-faint)] sm:px-8">
