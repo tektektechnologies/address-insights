@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Address Insights
 
-## Getting Started
+Search a street address, explore nearby OpenStreetMap amenities, and view heuristic walking, driving, and urban-density scores on a shareable insights page.
 
-First, run the development server:
+**Live app:** [https://vercel.com/tektektechnologies-projects/address-insights](https://vercel.com/tektektechnologies-projects/address-insights)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## What I built vs AI assistance
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+This project was developed with AI coding assistants under my direction.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**I owned:**
+- Requirements and incremental delivery plan
+- Architecture choices (server-side geocoding/amenities, URL-shareable results, pure scoring functions)
+- Environment/secrets setup and Vercel deployment
+- Debugging real provider failures (LocationIQ auth/timeouts, Overpass QL syntax, mirror failover)
+- Review, verification (`lint` / `tsc` / `test` / `build`), and UX acceptance
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**AI assistants accelerated:**
+- Boilerplate and feature implementation from my prompts
+- First-pass UI wiring, tests, and repetitive refactoring
 
-## Learn More
+This is an accurate split for interviews: I can explain every decision and failure mode; AI helped ship faster, not replace ownership.
 
-To learn more about Next.js, take a look at the following resources:
+## Approach
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Keep secrets and provider calls on the server (`/api/geocode`, `/api/amenities`).
+2. Put shareable state in the URL (`lat`, `lng`, `address`) so results work in a fresh browser.
+3. Keep scoring deterministic and testable in `src/lib/scoring.ts`.
+4. Render Leaflet only on the client; use Overpass mirrors + clear timeout/retry UX when public OSM infrastructure is busy.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Assumptions & design decisions
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Scores are transparent heuristics from nearby POI density/diversity — not official walkability or travel-time models.
+- Amenity radius is fixed server-side (~3.5 km); clients cannot choose arbitrary Overpass radii.
+- `localStorage` is only for recent searches; never the source of truth for shared links.
+- LocationIQ + OpenStreetMap attributions remain visible per provider terms.
+- Requires `LOCATIONIQ_TOKEN` in `.env.local` (local) and Vercel project env (production).
