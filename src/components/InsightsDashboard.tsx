@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
+import { MapView } from "@/src/components/MapView";
 import { formatAmenityCategory, formatDistance } from "@/src/lib/format";
 import { saveSearchHistoryEntry } from "@/src/lib/history";
 import { parseInsightsLocation } from "@/src/lib/insights-location";
@@ -401,6 +402,16 @@ export function InsightsDashboard() {
         Scores are heuristic estimates based on nearby amenities, not official
         walkability ratings or actual travel times.
       </p>
+
+      <section className="mt-8" aria-label="Neighborhood map">
+        <h2 className="mb-3 text-lg font-semibold tracking-tight">Map</h2>
+        <MapView
+          latitude={location.latitude}
+          longitude={location.longitude}
+          address={location.address}
+          amenities={amenities}
+        />
+      </section>
 
       <section className="mt-8 rounded-2xl border border-[var(--line)] bg-[var(--surface)]/95 p-5 sm:p-6">
         <h2 className="text-lg font-semibold tracking-tight">
