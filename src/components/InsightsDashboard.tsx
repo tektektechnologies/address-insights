@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
+import { CopyLinkButton } from "@/src/components/CopyLinkButton";
 import { MapView } from "@/src/components/MapView";
 import { formatAmenityCategory, formatDistance } from "@/src/lib/format";
 import { saveSearchHistoryEntry } from "@/src/lib/history";
@@ -350,7 +351,10 @@ export function InsightsDashboard() {
               {location.address}
             </h1>
           </div>
-          <SearchAnotherLink />
+          <div className="flex flex-wrap items-start gap-3">
+            <CopyLinkButton />
+            <SearchAnotherLink />
+          </div>
         </div>
       </header>
 
