@@ -1,5 +1,16 @@
-/** Centralized Overpass endpoint so the provider can be swapped later. */
-export const OVERPASS_API_URL = "https://overpass-api.de/api/interpreter";
+/**
+ * Primary + fallback Overpass interpreters.
+ * Public instances are often busy; failover keeps the app usable.
+ */
+export const OVERPASS_API_URLS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://gall.openstreetmap.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+] as const;
+
+/** Overpass asks clients to identify themselves; anonymous Node UA is often throttled. */
+export const OVERPASS_USER_AGENT =
+  "AddressInsights/0.1 (neighborhood-insights; contact=local-dev)";
 
 /** Server-defined search radius; never accepted from the client. */
 export const OVERPASS_SEARCH_RADIUS_METERS = 3500;

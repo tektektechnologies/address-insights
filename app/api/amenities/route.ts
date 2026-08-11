@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 
 import { buildAmenitiesOverpassQuery } from "@/src/lib/overpass/build-query";
 import {
-  OVERPASS_API_URL,
+  OVERPASS_API_URLS,
   OVERPASS_FETCH_TIMEOUT_MS,
+  OVERPASS_USER_AGENT,
 } from "@/src/lib/overpass/config";
 import { normalizeOverpassAmenities } from "@/src/lib/overpass/normalize-amenities";
 
@@ -19,6 +20,17 @@ function isTimeoutError(error: unknown): boolean {
   return (
     error instanceof Error &&
     (error.name === "TimeoutError" || error.name === "AbortError")
+  );
+}
+
+/** Upstream statuses that are usually temporary overload / gateway issues. */
+function isTransientProviderStatus(status: number): boolean {
+  return (
+    status === 408 ||
+    status === 429 ||
+    status === 502 ||
+    status === 503 ||
+    status === 504
   );
 }
 
@@ -46,6 +58,24 @@ function parseBoundedCoordinate(
   return value;
 }
 
+async function fetchOverpass(
+  endpoint: string,
+  body: URLSearchParams,
+): Promise<Response> {
+  return fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+      "User-Agent": OVERPASS_USER_AGENT,
+    },
+    body,
+    cache: "no-store",
+    redirect: "follow",
+    signal: AbortSignal.timeout(OVERPASS_FETCH_TIMEOUT_MS),
+  });
+}
+
 export async function GET(request: Request): Promise<NextResponse> {
   const { searchParams } = new URL(request.url);
   const latitude = parseBoundedCoordinate(searchParams.get("lat"), "lat");
@@ -62,39 +92,71 @@ export async function GET(request: Request): Promise<NextResponse> {
   const query = buildAmenitiesOverpassQuery(latitude, longitude);
   const body = new URLSearchParams({ data: query });
 
-  let providerResponse: Response;
+  let transientFailures = 0;
+  let hardFailures = 0;
 
-  try {
-    providerResponse = await fetch(OVERPASS_API_URL, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-      },
-      body,
-      cache: "no-store",
-      signal: AbortSignal.timeout(OVERPASS_FETCH_TIMEOUT_MS),
-    });
-  } catch (error) {
-    if (isTimeoutError(error)) {
-      return jsonError("Amenities request timed out.", 504);
+  for (const endpoint of OVERPASS_API_URLS) {
+    let providerResponse: Response;
+
+    try {
+      providerResponse = await fetchOverpass(endpoint, body);
+    } catch (error) {
+      if (isTimeoutError(error)) {
+        console.warn(`Overpass request timed out for ${endpoint}`);
+        transientFailures += 1;
+        continue;
+      }
+
+      console.warn(`Overpass network failure for ${endpoint}`);
+      hardFailures += 1;
+      continue;
     }
 
-    return jsonError("Failed to reach amenities provider.", 502);
+    if (!providerResponse.ok) {
+      const { status } = providerResponse;
+      console.warn(`Overpass non-OK response from ${endpoint}: ${status}`);
+
+      if (isTransientProviderStatus(status)) {
+        transientFailures += 1;
+      } else {
+        hardFailures += 1;
+      }
+
+      // Drain the body so the connection can close cleanly, then try a mirror.
+      await providerResponse.arrayBuffer().catch(() => undefined);
+      continue;
+    }
+
+    let payload: unknown;
+
+    try {
+      payload = await providerResponse.json();
+    } catch {
+      hardFailures += 1;
+      continue;
+    }
+
+    const amenities = normalizeOverpassAmenities(payload, latitude, longitude);
+    return NextResponse.json({ amenities });
   }
 
-  if (!providerResponse.ok) {
-    return jsonError("Amenities provider returned an error.", 502);
+  // Prefer a retryable timeout response when providers were only slow/overloaded.
+  if (transientFailures > 0 && hardFailures === 0) {
+    return jsonError(
+      "The amenities service is busy or timed out. Please try again in a moment.",
+      504,
+    );
   }
 
-  let payload: unknown;
-
-  try {
-    payload = await providerResponse.json();
-  } catch {
-    return jsonError("Amenities provider returned invalid data.", 502);
+  if (transientFailures >= hardFailures) {
+    return jsonError(
+      "The amenities service is busy or timed out. Please try again in a moment.",
+      504,
+    );
   }
 
-  const amenities = normalizeOverpassAmenities(payload, latitude, longitude);
-  return NextResponse.json({ amenities });
+  return jsonError(
+    "Amenities data is temporarily unavailable. Please try again.",
+    502,
+  );
 }

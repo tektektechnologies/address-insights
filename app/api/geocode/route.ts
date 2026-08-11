@@ -22,6 +22,16 @@ function isTimeoutError(error: unknown): boolean {
   );
 }
 
+function isTransientProviderStatus(status: number): boolean {
+  return (
+    status === 408 ||
+    status === 429 ||
+    status === 502 ||
+    status === 503 ||
+    status === 504
+  );
+}
+
 export async function GET(request: Request): Promise<NextResponse> {
   const { searchParams } = new URL(request.url);
   const rawQuery = searchParams.get("q");
@@ -62,10 +72,13 @@ export async function GET(request: Request): Promise<NextResponse> {
     });
   } catch (error) {
     if (isTimeoutError(error)) {
-      return jsonError("Geocoding request timed out.", 504);
+      return jsonError(
+        "The address search service timed out. Please try again in a moment.",
+        504,
+      );
     }
 
-    return jsonError("Failed to reach geocoding provider.", 502);
+    return jsonError("Failed to reach the address search service.", 502);
   }
 
   // LocationIQ commonly responds with 404 when nothing matches; treat as empty.
@@ -74,7 +87,17 @@ export async function GET(request: Request): Promise<NextResponse> {
   }
 
   if (!providerResponse.ok) {
-    return jsonError("Geocoding provider returned an error.", 502);
+    if (isTransientProviderStatus(providerResponse.status)) {
+      return jsonError(
+        "The address search service is busy or timed out. Please try again in a moment.",
+        504,
+      );
+    }
+
+    return jsonError(
+      "The address search service is temporarily unavailable. Please try again.",
+      502,
+    );
   }
 
   let payload: unknown;

@@ -294,6 +294,8 @@ export function InsightsDashboard() {
   }
 
   if (loadState.status === "error") {
+    const isTimeout = /timed out|busy|taking too long/i.test(loadState.message);
+
     return (
       <PageShell>
         <header>
@@ -310,11 +312,26 @@ export function InsightsDashboard() {
           role="alert"
         >
           <h2 className="text-lg font-semibold text-[var(--ink)]">
-            We couldn&apos;t load nearby amenities
+            {isTimeout
+              ? "This is taking longer than usual"
+              : "We couldn&apos;t load nearby amenities"}
           </h2>
           <p className="mt-2 text-base leading-relaxed break-words text-[var(--ink-muted)]">
-            <span className="font-semibold text-[var(--danger)]">Error: </span>
-            {loadState.message}
+            {isTimeout ? (
+              loadState.message
+            ) : (
+              <>
+                <span className="font-semibold text-[var(--danger)]">
+                  Error:{" "}
+                </span>
+                {loadState.message}
+              </>
+            )}
+          </p>
+          <p className="mt-2 text-sm text-[var(--ink-faint)]">
+            {isTimeout
+              ? "OpenStreetMap amenity servers are sometimes busy. Waiting a moment and retrying usually works."
+              : "You can retry this request or search for a different address."}
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <button
